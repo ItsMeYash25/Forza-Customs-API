@@ -29,7 +29,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
-  cors({ origin: "https://forza-customs.vercel.app/", withCredentials: true })
+  cors({ origin: "https://forza-customs.vercel.app", withCredentials: true })
 );
 
 // Routes
