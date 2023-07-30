@@ -11,10 +11,17 @@ import cookieParser from "cookie-parser";
 import { fileURLToPath } from "url";
 import path from "path";
 import { dirname } from "path";
+import { v2 as cloudinary } from "cloudinary";
 
 // Config File
 dotenv.config();
 connectDB();
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLIENT_NAME,
+  api_key: process.env.CLOUDINARY_CLIENT_API,
+  api_secret: process.env.CLOUDINARY_CLIENT_SECRET,
+});
 
 // Initialization
 const __filename = fileURLToPath(import.meta.url);

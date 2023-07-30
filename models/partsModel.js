@@ -9,9 +9,9 @@ const partSchema = mongoose.Schema(
       type: Number,
       required: [true, "Please add the price of part"],
     },
-    imageURL: {
-      type: String,
-      required: [true, "Please add the image of part"],
+    poster: {
+      public_id: { type: String },
+      url: { type: String },
     },
   },
   {

@@ -7,14 +7,12 @@ import {
   updateParts,
   deleteParts,
 } from "../controllers/partsController.js";
+import singleUpload from "../middleware/multer.js";
 const app = express();
-import multer from "multer";
-
-const upload = multer({ storage: multer.memoryStorage() });
 
 router.get("/", viewAllParts);
 router.get("/:id", viewPartsById);
-router.post("/add", upload.single("file"), addParts);
+router.post("/add", singleUpload, addParts);
 router.put("/update/:id", updateParts);
 router.delete("/delete/:id", deleteParts);
 

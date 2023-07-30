@@ -1,8 +1,8 @@
 import asyncHandler from "express-async-handler";
 import Parts from "../models/partsModel.js";
 import fs from "fs";
-import { storage } from "../config/firebase.config.js";
-import { ref, uploadBytes } from "firebase/storage";
+import { v2 as cloudinary } from "cloudinary";
+import getDataUri from "../utils/dataUri.js";
 // @desc   View All Parts
 // route   GET /api/parts/
 // @access Private
@@ -23,12 +23,16 @@ const viewPartsById = asyncHandler(async (req, res) => {
 // @access Private
 const addParts = asyncHandler(async (req, res) => {
   const data = req.body;
-
-  const storageRef = ref(storage, req.file.originalname);
-  uploadBytes(storageRef, req.file.buffer);
-  const { originalname, path } = req.file;
+  const file = req.file;
   const { name, price } = data;
-  const partDoc = await Parts.create({ name, price, imageURL: newPath });
+  const fileUri = getDataUri(file);
+
+  const myCloud = await cloudinary.uploader.upload(fileUri.content);
+  const partDoc = await Parts.create({
+    name,
+    price,
+    poster: { public_id: myCloud.public_id, url: myCloud.secure_url },
+  });
   res.status(201).json({ message: "part added successfully", partDoc });
 });
 
