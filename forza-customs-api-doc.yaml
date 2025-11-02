@@ -1,0 +1,447 @@
+openapi: 3.0.3
+info:
+  title: Forza Customs API
+  version: 1.0.0
+  description: |
+    RESTful API for Forza Customs — managing users, car parts, bills, and service appointments.
+    Base URL: `https://forza-customs-api.vercel.app/`
+servers:
+  - url: https://forza-customs-api.vercel.app/api
+    description: Production Server
+
+tags:
+  - name: Users
+    description: Manage users (authentication and profile)
+  - name: Parts
+    description: Manage car parts inventory
+  - name: Bills
+    description: Manage billing and invoice information
+  - name: Service
+    description: Manage car service appointments
+
+paths:
+  /users:
+    get:
+      tags: [Users]
+      summary: Get all users
+      responses:
+        "200":
+          description: List of all users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        "404":
+          description: No users found
+
+  /users/register:
+    post:
+      tags: [Users]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: User registered successfully
+        "401":
+          description: User already exists
+
+  /users/login:
+    post:
+      tags: [Users]
+      summary: Login user and get token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "201":
+          description: Login successful
+        "401":
+          description: Invalid credentials
+
+  /users/profile:
+    get:
+      tags: [Users]
+      summary: Get logged-in user's profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User profile fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Unauthorized
+
+  /parts:
+    get:
+      tags: [Parts]
+      summary: Get all parts
+      responses:
+        "200":
+          description: All available parts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  parts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Part"
+
+  /parts/{id}:
+    get:
+      tags: [Parts]
+      summary: Get part by ID
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Part ID
+      responses:
+        "200":
+          description: Part details
+        "404":
+          description: Part not found
+
+  /parts/add:
+    post:
+      tags: [Parts]
+      summary: Add a new part
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                price:
+                  type: number
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: Part added successfully
+
+  /parts/update/{id}:
+    put:
+      tags: [Parts]
+      summary: Update a part by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PartUpdate"
+      responses:
+        "200":
+          description: Part updated successfully
+
+  /parts/delete/{id}:
+    delete:
+      tags: [Parts]
+      summary: Delete a part by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "202":
+          description: Part deleted successfully
+
+  /bill:
+    get:
+      tags: [Bills]
+      summary: Get all bills
+      responses:
+        "200":
+          description: List of all bills
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  billDoc:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Bill"
+
+  /bill/generate:
+    post:
+      tags: [Bills]
+      summary: Generate a new bill
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Bill"
+      responses:
+        "200":
+          description: Bill generated successfully
+
+  /bill/shipped/{id}:
+    put:
+      tags: [Bills]
+      summary: Change bill status (toggle shipped/pending)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: shipped
+      responses:
+        "200":
+          description: Status updated successfully
+
+  /service:
+    get:
+      tags: [Service]
+      summary: View all service appointments
+      responses:
+        "200":
+          description: List of all appointments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Service"
+
+  /service/add:
+    post:
+      tags: [Service]
+      summary: Add a new service appointment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceRequest"
+      responses:
+        "200":
+          description: Appointment added successfully
+
+  /service/check:
+    post:
+      tags: [Service]
+      summary: Check appointment status by ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+      responses:
+        "200":
+          description: Appointment details
+
+  /service/update:
+    put:
+      tags: [Service]
+      summary: Update appointment status
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceUpdate"
+      responses:
+        "200":
+          description: Appointment status updated
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegisterRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+        admin:
+          type: boolean
+        warehouse:
+          type: boolean
+        service:
+          type: boolean
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+        admin:
+          type: boolean
+        warehouse:
+          type: boolean
+        service:
+          type: boolean
+
+    Part:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        price:
+          type: number
+        poster:
+          type: object
+          properties:
+            public_id:
+              type: string
+            url:
+              type: string
+
+    PartUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        price:
+          type: number
+
+    Bill:
+      type: object
+      properties:
+        _id:
+          type: string
+        customerName:
+          type: string
+        items:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          example: pending
+
+    Service:
+      type: object
+      properties:
+        _id:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        contact_number:
+          type: string
+        address:
+          type: string
+        vehicle_name:
+          type: string
+        vehicle_number:
+          type: string
+        appointment_date:
+          type: string
+        status:
+          type: string
+        message:
+          type: string
+
+    ServiceRequest:
+      type: object
+      properties:
+        fName:
+          type: string
+        lName:
+          type: string
+        email:
+          type: string
+        contact:
+          type: string
+        addr:
+          type: string
+        vName:
+          type: string
+        vNum:
+          type: string
+        aptDate:
+          type: string
+
+    ServiceUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        message:
+          type: string

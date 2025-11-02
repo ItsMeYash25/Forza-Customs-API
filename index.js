@@ -12,6 +12,8 @@ import { fileURLToPath } from "url";
 import path from "path";
 import { dirname } from "path";
 import { v2 as cloudinary } from "cloudinary";
+import swaggerUi from "swagger-ui-express";
+import YAML from "yamljs";
 
 // Config File
 dotenv.config();
@@ -27,6 +29,7 @@ cloudinary.config({
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const port = process.env.PORT || 4000;
+const swaggerDocument = YAML.load("./forza-customs-api-doc.yaml");
 const app = express();
 
 // Inbuilt Middleware
@@ -40,6 +43,7 @@ app.use(
 );
 
 // Routes
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use("/api/users", userRoutes);
 app.use("/api/parts", partRoutes);
 app.use("/api/bill", billRoutes);
