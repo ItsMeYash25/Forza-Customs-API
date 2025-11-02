@@ -75,14 +75,15 @@ app.use("/api/parts", partRoutes);
 app.use("/api/bill", billRoutes);
 app.use("/api/service", serviceRoutes);
 
+app.get("/", (req, res) => {
+  res.send("🚗 Forza Customs API running successfully!");
+});
+
 // ------------------- ERROR HANDLING -------------------
 app.use(notFound);
 app.use(errorHandler);
 
 // ------------------- START SERVER -------------------
-app.get("/", (req, res) => {
-  res.send("🚗 Forza Customs API running successfully!");
-});
 
 app.listen(port, () => {
   console.log(`✅ Server is running on port ${port}`);
