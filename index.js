@@ -29,7 +29,6 @@ cloudinary.config({
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const port = process.env.PORT || 4000;
-const swaggerDocument = YAML.load("./forza-customs-api-doc.yaml");
 const app = express();
 
 // Inbuilt Middleware
@@ -41,6 +40,21 @@ app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({ origin: "https://forza-customs.vercel.app", withCredentials: true })
 );
+
+const swaggerUrl = "https://raw.githubusercontent.com/ItsMeYash25/Forza-Customs-API/refs/heads/main/forza-customs-api-doc.yaml";
+
+let swaggerDocument;
+
+// Fetch YAML dynamically
+const loadSwagger = async () => {
+  const res = await fetch(swaggerUrl);
+  const text = await res.text();
+  swaggerDocument = YAML.parse(text);
+};
+
+// Preload before routes
+await loadSwagger();
+
 
 // Routes
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
