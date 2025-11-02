@@ -9,13 +9,12 @@ import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 import connectDB from "./config/db.js";
 import cookieParser from "cookie-parser";
 import { fileURLToPath } from "url";
-import path from "path";
-import { dirname } from "path";
+import path, { dirname } from "path";
 import { v2 as cloudinary } from "cloudinary";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
 
-// Config File
+// ------------------- CONFIG -------------------
 dotenv.config();
 connectDB();
 
@@ -25,47 +24,68 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_CLIENT_SECRET,
 });
 
-// Initialization
+// ------------------- INIT -------------------
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const port = process.env.PORT || 4000;
 const app = express();
 
-// Inbuilt Middleware
+// ------------------- MIDDLEWARE -------------------
 app.use(express.static(path.join(__dirname, "uploads")));
 app.use("/uploads", express.static("uploads"));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
-  cors({ origin: "https://forza-customs.vercel.app", withCredentials: true })
+  cors({
+    origin: "https://forza-customs.vercel.app",
+    credentials: true, // corrected key name
+  })
 );
 
-const swaggerUrl = "https://raw.githubusercontent.com/ItsMeYash25/Forza-Customs-API/refs/heads/main/forza-customs-api-doc.yaml";
+// ------------------- SWAGGER -------------------
+const swaggerUrl =
+  "https://raw.githubusercontent.com/ItsMeYash25/Forza-Customs-API/refs/heads/main/forza-customs-api-doc.yaml";
 
-let swaggerDocument;
+let swaggerDocument = null;
 
-// Fetch YAML dynamically
-const loadSwagger = async () => {
-  const res = await fetch(swaggerUrl);
-  const text = await res.text();
-  swaggerDocument = YAML.parse(text);
-};
+async function getSwaggerDoc() {
+  if (!swaggerDocument) {
+    try {
+      const res = await fetch(swaggerUrl);
+      const text = await res.text();
+      swaggerDocument = YAML.parse(text);
+    } catch (error) {
+      console.error("❌ Failed to load Swagger YAML:", error);
+      swaggerDocument = { openapi: "3.0.0", info: { title: "Error Loading Docs" } };
+    }
+  }
+  return swaggerDocument;
+}
 
-// Preload before routes
-await loadSwagger();
+// Lazy load swagger on request
+app.use("/api-docs", async (req, res, next) => {
+  const doc = await getSwaggerDoc();
+  swaggerUi.setup(doc)(req, res, next);
+}, swaggerUi.serve);
 
-
-// Routes
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+// ------------------- ROUTES -------------------
 app.use("/api/users", userRoutes);
 app.use("/api/parts", partRoutes);
 app.use("/api/bill", billRoutes);
 app.use("/api/service", serviceRoutes);
 
-// Middleware
+// ------------------- ERROR HANDLING -------------------
 app.use(notFound);
 app.use(errorHandler);
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+
+// ------------------- START SERVER -------------------
+app.get("/", (req, res) => {
+  res.send("🚗 Forza Customs API running successfully!");
 });
+
+app.listen(port, () => {
+  console.log(`✅ Server is running on port ${port}`);
+});
+
+export default app;
