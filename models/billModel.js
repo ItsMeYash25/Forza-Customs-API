@@ -1,23 +1,42 @@
+// models/Bill.js
 import mongoose from "mongoose";
 
-const billSchema = mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true },
-  contact: { type: String, required: true },
-  addr: { type: String, required: true },
-  cart: [
-    {
-      id: { type: mongoose.Schema.Types.ObjectId },
-      name: { type: String },
-      price: { type: Number },
-      qty: { type: Number },
-      total: { type: Number },
-    },
-  ],
-  totalCost: { type: Number },
-  status: { type: String, required: true, default: "pending" },
+const cartItemSchema = new mongoose.Schema({
+  part: { type: mongoose.Schema.Types.ObjectId, ref: "Part" },
+  name: String,
+  price: Number,
+  qty: Number,
+  total: Number,
 });
 
-const Bill = mongoose.model("Bill", billSchema);
+const billSchema = new mongoose.Schema(
+  {
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    contact: {
+      name: { type: String, required: true },
+      email: { type: String, required: true },
+      phone: { type: String, required: true },
+      address: { type: String, required: true },
+    },
+    cart: [cartItemSchema],
+    totalCost: { type: Number, required: true },
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "paid", "failed"],
+      default: "pending",
+    },
+    orderStatus: {
+      type: String,
+      enum: ["pending", "confirmed", "shipped", "delivered", "cancelled"],
+      default: "pending",
+    },
+    paymentMethod: {
+      type: String,
+      enum: ["cod", "online"],
+      default: "cod",
+    },
+  },
+  { timestamps: true }
+);
 
-export default Bill;
+export default mongoose.model("Bill", billSchema);

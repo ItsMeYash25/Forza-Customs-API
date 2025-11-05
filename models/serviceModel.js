@@ -1,18 +1,28 @@
+// models/Service.js
 import mongoose from "mongoose";
 
-const serviceSchema = mongoose.Schema({
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
-  email: { type: String, required: true },
-  contact_number: { type: Number, required: true },
-  address: { type: String, required: true },
-  vehicle_name: { type: String, required: true },
-  vehicle_number: { type: String, required: true },
-  appointment_date: { type: String, required: true },
-  status: { type: String, default: "Unseen" },
-  message: { type: String, default: "Your appointment is not yet reviewed." },
-});
+const serviceSchema = new mongoose.Schema(
+  {
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
+    email: { type: String, required: true },
+    contactNumber: { type: String, required: true },
+    address: { type: String, required: true },
+    vehicleName: { type: String, required: true },
+    vehicleNumber: { type: String, required: true },
+    appointmentDate: { type: Date, required: true },
+    status: {
+      type: String,
+      enum: ["Unseen", "Confirmed", "In Progress", "Completed", "Cancelled"],
+      default: "Unseen",
+    },
+    message: {
+      type: String,
+      default: "Your appointment is not yet reviewed.",
+    },
+  },
+  { timestamps: true }
+);
 
-const Service = mongoose.model("Service", serviceSchema);
-
-export default Service;
+export default mongoose.model("Service", serviceSchema);
