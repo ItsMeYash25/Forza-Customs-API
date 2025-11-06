@@ -2,8 +2,11 @@ import express from "express";
 import cors from "cors";
 import userRoutes from "./routes/userRoutes.js";
 import partRoutes from "./routes/partRoutes.js";
+import cartRoutes from "./routes/cartRoutes.js";
+import dealRoutes from "./routes/dealRoutes.js";
 import billRoutes from "./routes/billRoutes.js";
 import serviceRoutes from "./routes/serviceRoutes.js";
+import bannerRoutes from "./routes/bannerRoutes.js"; // Add this
 import dotenv from "dotenv";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 import connectDB from "./config/db.js";
@@ -38,8 +41,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
-    origin: "https://forza-customs.vercel.app",
-    credentials: true, // corrected key name
+    origin: "*",
+    // origin: ["https://forza-customs.vercel.app", "*"],
+    credentials: true,
   })
 );
 
@@ -72,8 +76,11 @@ app.use("/api-docs", async (req, res, next) => {
 // ------------------- ROUTES -------------------
 app.use("/api/users", userRoutes);
 app.use("/api/parts", partRoutes);
+app.use("/api/carts", cartRoutes);
 app.use("/api/bill", billRoutes);
 app.use("/api/service", serviceRoutes);
+app.use("/api/deals", dealRoutes);
+app.use("/api/banners", bannerRoutes); // Add this
 
 app.get("/", (req, res) => {
   res.send("🚗 Forza Customs API running successfully!");
@@ -84,7 +91,6 @@ app.use(notFound);
 app.use(errorHandler);
 
 // ------------------- START SERVER -------------------
-
 app.listen(port, () => {
   console.log(`✅ Server is running on port ${port}`);
 });

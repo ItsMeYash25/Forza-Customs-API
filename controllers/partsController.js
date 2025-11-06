@@ -36,7 +36,7 @@ const viewAllParts = asyncHandler(async (req, res) => {
     ];
   }
   if (tags) {
-    const tagArray = tags.split(",");
+    const tagArray = tags.split(",").map(tag => tag.trim());
     query.tags = { $in: tagArray };
   }
 
@@ -54,7 +54,7 @@ const viewAllParts = asyncHandler(async (req, res) => {
   const skip = (Number(page) - 1) * Number(limit);
 
   const parts = await Parts.find(query)
-    .populate("category", "name")
+    .populate("category", "name icon")
     .sort(sortOption)
     .skip(skip)
     .limit(Number(limit));
@@ -79,7 +79,7 @@ const viewAllParts = asyncHandler(async (req, res) => {
 const viewPartsById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const part = await Parts.findById(id).populate("category", "name");
+  const part = await Parts.findById(id).populate("category", "name icon description");
 
   if (!part) {
     res.status(404);
@@ -130,8 +130,12 @@ const addParts = asyncHandler(async (req, res) => {
     stock: stock ? Number(stock) : 0,
     featured: featured === "true" || featured === true,
     discount: discount ? Number(discount) : 0,
-    poster: posterData,
   };
+
+  // Only add poster if file was uploaded
+  if (Object.keys(posterData).length > 0) {
+    partData.poster = posterData;
+  }
 
   // Parse tags if provided as string
   if (tags) {
@@ -139,6 +143,9 @@ const addParts = asyncHandler(async (req, res) => {
   }
 
   const partDoc = await Parts.create(partData);
+
+  // Populate category before sending response
+  await partDoc.populate("category", "name icon");
 
   res.status(201).json({
     success: true,
@@ -165,11 +172,11 @@ const updateParts = asyncHandler(async (req, res) => {
   if (name) part.name = name;
   if (description !== undefined) part.description = description;
   if (category) part.category = category;
-  if (price) part.price = Number(price);
+  if (price !== undefined) part.price = Number(price);
   if (stock !== undefined) part.stock = Number(stock);
   if (featured !== undefined) part.featured = featured === "true" || featured === true;
   if (discount !== undefined) part.discount = Number(discount);
-  if (tags) {
+  if (tags !== undefined) {
     part.tags = typeof tags === "string" ? tags.split(",").map(tag => tag.trim()) : tags;
   }
 
@@ -195,6 +202,9 @@ const updateParts = asyncHandler(async (req, res) => {
   }
 
   await part.save();
+
+  // Populate category before sending response
+  await part.populate("category", "name icon");
 
   res.status(200).json({
     success: true,
@@ -311,10 +321,8 @@ const deleteGalleryImage = asyncHandler(async (req, res) => {
     await cloudinary.uploader.destroy(image.public_id);
   }
 
-  // Remove from gallery
-  part.gallery = part.gallery.filter(
-    img => img._id.toString() !== imageId
-  );
+  // Remove from gallery using pull method (more reliable)
+  part.gallery.pull(imageId);
 
   await part.save();
 
@@ -359,7 +367,7 @@ const updateStock = asyncHandler(async (req, res) => {
 // @access  Public
 const getFeaturedParts = asyncHandler(async (req, res) => {
   const parts = await Parts.find({ featured: true })
-    .populate("category", "name")
+    .populate("category", "name icon")
     .limit(10)
     .sort({ createdAt: -1 });
 
