@@ -6,7 +6,8 @@ import cartRoutes from "./routes/cartRoutes.js";
 import dealRoutes from "./routes/dealRoutes.js";
 import billRoutes from "./routes/billRoutes.js";
 import serviceRoutes from "./routes/serviceRoutes.js";
-import bannerRoutes from "./routes/bannerRoutes.js"; // Add this
+import bannerRoutes from "./routes/bannerRoutes.js";
+import categoryRoutes from "./routes/categoryRoutes.js";
 import dotenv from "dotenv";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 import connectDB from "./config/db.js";
@@ -80,7 +81,8 @@ app.use("/api/carts", cartRoutes);
 app.use("/api/bill", billRoutes);
 app.use("/api/service", serviceRoutes);
 app.use("/api/deals", dealRoutes);
-app.use("/api/banners", bannerRoutes); // Add this
+app.use("/api/banners", bannerRoutes);
+app.use("/api/categories", categoryRoutes);
 
 app.get("/", (req, res) => {
   res.send("🚗 Forza Customs API running successfully!");

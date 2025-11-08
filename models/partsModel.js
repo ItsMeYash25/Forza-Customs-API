@@ -13,7 +13,7 @@ const partSchema = new mongoose.Schema(
     price: { type: Number, required: true },
     stock: { type: Number, default: 0 },
     featured: { type: Boolean, default: false },
-    discount: { type: Number, default: 0 }, // percent
+    discount: { type: Number, default: 0 },
     poster: imageSchema,
     gallery: [imageSchema],
     tags: [String],
