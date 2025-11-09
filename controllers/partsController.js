@@ -368,7 +368,7 @@ const updateStock = asyncHandler(async (req, res) => {
 const getFeaturedParts = asyncHandler(async (req, res) => {
   const parts = await Parts.find({ featured: true })
     .populate("category", "name icon")
-    .limit(10)
+    .limit(5)
     .sort({ createdAt: -1 });
 
   res.status(200).json({

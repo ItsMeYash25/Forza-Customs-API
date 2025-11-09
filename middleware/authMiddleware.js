@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import asyncHandler from "express-async-handler";
 import User from "../models/userModel.js";
+import Session from "../models/sessionModel.js";
 
 // Protect routes - verify token
 const protect = asyncHandler(async (req, res, next) => {
@@ -15,6 +16,12 @@ const protect = asyncHandler(async (req, res, next) => {
       // Verify token
       const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
+      const session = await Session.findOne({ token, isActive: true });
+
+      if (!session) {
+        return res.status(401).json({ message: "Session expired or logged out" });
+      }
+
       // Get user from token
       req.user = await User.findById(decoded.userId).select("-password");
 
@@ -23,7 +30,10 @@ const protect = asyncHandler(async (req, res, next) => {
         throw new Error("User not found");
       }
 
+      session.lastActiveAt = new Date();
+      await session.save();
       next();
+
     } catch (error) {
       console.error(error);
       res.status(401);

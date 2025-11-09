@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import "./cronJobs/cleanupSessions.js";
 import userRoutes from "./routes/userRoutes.js";
 import partRoutes from "./routes/partRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";

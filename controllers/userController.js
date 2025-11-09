@@ -3,6 +3,10 @@ import User from "../models/userModel.js";
 import generateToken from "../utils/generateToken.js";
 import { v2 as cloudinary } from "cloudinary";
 import getDataUri from "../utils/dataUri.js";
+import Session from "../models/sessionModel.js";
+import requestIp from "request-ip";
+import useragent from "useragent";
+import geoip from "geoip-lite";
 
 // @desc   Register User
 // route   POST /api/users/register
@@ -57,6 +61,33 @@ const login = asyncHandler(async (req, res) => {
 
   if (user && (await user.comparePassword(password))) {
     const token = generateToken(res, user._id);
+
+    // Capture device info
+    const ipAddress = requestIp.getClientIp(req);
+    const userAgent = req.headers["user-agent"];
+    const agent = useragent.parse(userAgent);
+
+    const geo = geoip.lookup(ipAddress);
+    const location = geo
+      ? {
+        city: geo.city || "Unknown",
+        region: geo.region || "Unknown",
+        country: geo.country || "Unknown",
+      }
+      : { city: "Unknown", region: "Unknown", country: "Unknown" };
+
+
+    // Create session entry
+    const session = await Session.create({
+      user: user._id,
+      ipAddress,
+      userAgent,
+      device: agent.device.toString(),
+      os: agent.os.toString(),
+      location,
+      token,
+    });
+
     res.status(200).json({
       id: user._id,
       username: user.username,
@@ -66,6 +97,7 @@ const login = asyncHandler(async (req, res) => {
       isVerified: user.isVerified,
       avatar: user.avatar,
       token: token,
+      sessionId: session._id,
     });
   } else {
     res.status(401).json({ message: "Invalid email or password" });
@@ -303,9 +335,25 @@ const deleteAddress = asyncHandler(async (req, res) => {
   }
 });
 
+const logout = asyncHandler(async (req, res) => {
+  const { sessionId } = req.body;
+
+  const session = await Session.findById(sessionId);
+
+  if (!session) {
+    return res.status(404).json({ message: "Session not found" });
+  }
+
+  session.isActive = false;
+  await session.save();
+
+  res.json({ message: "Logged out from this device" });
+});
+
 export {
   login,
   register,
+  logout,
   profile,
   updateProfile,
   updateAvatar,
