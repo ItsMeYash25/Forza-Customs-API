@@ -8,7 +8,7 @@ import Part from "../models/partsModel.js";
 const getCart = asyncHandler(async (req, res) => {
     let cart = await Cart.findOne({ user: req.user._id }).populate(
         "cart.part",
-        "name price stock"
+        "name price stock poster"
     );
 
     if (!cart) {
@@ -90,7 +90,7 @@ const addToCart = asyncHandler(async (req, res) => {
 
     cart = await Cart.findById(cart._id).populate(
         "cart.part",
-        "name price stock"
+        "name price stock poster"
     );
 
     res.status(200).json(cart);
@@ -148,7 +148,7 @@ const updateCartItem = asyncHandler(async (req, res) => {
 
     const updatedCart = await Cart.findById(cart._id).populate(
         "cart.part",
-        "name price stock"
+        "name price stock poster"
     );
 
     res.status(200).json(updatedCart);
@@ -186,7 +186,7 @@ const removeFromCart = asyncHandler(async (req, res) => {
 
     const updatedCart = await Cart.findById(cart._id).populate(
         "cart.part",
-        "name price stock"
+        "name price stock poster"
     );
 
     res.status(200).json(updatedCart);
@@ -270,7 +270,7 @@ const syncCart = asyncHandler(async (req, res) => {
 
     const updatedCart = await Cart.findById(cart._id).populate(
         "cart.part",
-        "name price stock"
+        "name price stock poster"
     );
 
     res.status(200).json({
